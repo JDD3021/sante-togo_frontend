@@ -1,0 +1,34 @@
+name: sante_plus_togo
+description: SANTÉ+ TOGO - Dossier Médical Électronique pour les centres de santé du Togo
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State management
+  flutter_riverpod: ^2.4.9
+  
+  # Navigation
+  go_router: ^13.0.0
+  
+  # Fonts
+  google_fonts: ^6.1.0
+  
+  # QR Code scanning (optional - can use mock if needed)
+  mobile_scanner: ^4.0.1
+  
+  # Icons
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true

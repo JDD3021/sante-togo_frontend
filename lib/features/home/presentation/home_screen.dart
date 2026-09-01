@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_badge.dart';
+import '../../../core/widgets/gradient_header.dart';
 import '../../../core/router/app_router.dart';
 
 /// Home screen with main navigation tiles
@@ -56,12 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         title: 'Nouveau patient',
                         icon: AppIcons.person,
                         backgroundColor: AppColors.accent,
-                        onTap: () {
-                          // TODO: Navigate to new patient form
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Formulaire nouveau patient - À implémenter')),
-                          );
-                        },
+                        onTap: () => context.push(AppRoutes.newPatient),
                       ),
                       
                       const SizedBox(height: AppConstants.spacingMd),
@@ -89,9 +85,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(AppConstants.spacingLg),
-      color: AppColors.white,
+    return GradientHeader(
+      padding: const EdgeInsets.fromLTRB(
+        AppConstants.spacingLg,
+        AppConstants.spacingMd,
+        AppConstants.spacingLg,
+        AppConstants.spacingLg,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -100,38 +100,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 'SANTÉ+ TOGO',
-                style: AppTextStyles.brandBold.copyWith(fontSize: 20),
+                style: AppTextStyles.brandBold
+                    .copyWith(fontSize: 20, color: AppColors.white),
               ),
               const SizedBox(height: AppConstants.spacingXxs),
               Text(
                 'Centre de Santé',
-                style: AppTextStyles.secondary,
+                style: AppTextStyles.secondary
+                    .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
               ),
             ],
           ),
-          ConnectionStatusBadge(isOnline: _isOnline),
+          ConnectionStatusBadge(isOnline: _isOnline, onDark: true),
         ],
       ),
     );
   }
 
   Widget _buildBottomNavBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.line,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppConstants.spacingLg,
+          0,
+          AppConstants.spacingLg,
+          AppConstants.spacingMd,
+        ),
+        child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.spacingLg,
             vertical: AppConstants.spacingSm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(AppConstants.radiusXxl),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowSoft,
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -152,12 +161,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: AppIcons.settings,
                 label: 'Réglages',
                 isSelected: false,
-                onTap: () {
-                  // TODO: Navigate to settings
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Réglages - À implémenter')),
-                  );
-                },
+                onTap: () => context.push(AppRoutes.settings),
               ),
             ],
           ),
@@ -174,11 +178,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppConstants.radiusMd),
-      child: Padding(
+      borderRadius: BorderRadius.circular(AppConstants.radiusPill),
+      child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingMd,
           vertical: AppConstants.spacingSm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryLight : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppConstants.radiusPill),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

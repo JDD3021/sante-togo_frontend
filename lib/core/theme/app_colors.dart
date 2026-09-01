@@ -11,6 +11,17 @@ class AppColors {
   static const Color primary = Color(0xFF1A6B54);
   static const Color primaryDark = Color(0xFF0F4A39);
   static const Color primaryLight = Color(0xFFDCEDE6);
+  static const Color primarySoft = Color(0xFF2F9E7C);
+
+  // Soft gradient used on curved hero headers (login, home, patient header)
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primaryDark, primary, primarySoft],
+  );
+
+  /// Soft, primary-tinted shadow for a gentler elevation than flat grey
+  static Color shadowSoft = primary.withValues(alpha: 0.14);
 
   // Accent - Warm orange for moderate alerts, reminders, items to process
   static const Color accent = Color(0xFFE67E22);

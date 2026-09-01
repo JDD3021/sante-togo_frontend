@@ -6,8 +6,9 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../core/widgets/gradient_header.dart';
 import '../../../core/router/app_router.dart';
-import '../../patient_search/data/mock_patient_repository.dart';
+import '../../patient_search/data/api_patient_repository.dart';
 import '../../patient_search/domain/patient.dart';
 
 /// Patient record screen with action grid
@@ -25,13 +26,17 @@ class PatientRecordScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
-  final MockPatientRepository _repository = MockPatientRepository();
+  final ApiPatientRepository _repository = ApiPatientRepository();
   Patient? _patient;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _loadPatient();
+  }
+
+  void _refreshPatient() {
     _loadPatient();
   }
 
@@ -47,24 +52,16 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
   void _onActionPressed(String action) {
     switch (action) {
       case 'history':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Historique des consultations - À implémenter')),
-        );
+        context.push('/patient/${widget.patientId}/history');
         break;
       case 'treatments':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Traitements en cours - À implémenter')),
-        );
+        context.push('/patient/${widget.patientId}/treatments');
         break;
       case 'vaccinations':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Calendrier de vaccination - À implémenter')),
-        );
+        context.push('/patient/${widget.patientId}/vaccinations');
         break;
       case 'consultation':
-        context.push('${AppRoutes.consultation}/${widget.patientId}');
+        context.push('/patient/${widget.patientId}/consultation');
         break;
     }
   }
@@ -80,6 +77,21 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
         ),
         backgroundColor: AppColors.screenBg,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final result =
+                  await context.push('/patient/${widget.patientId}/edit');
+              if (result == true && mounted) {
+                _loadPatient();
+              } else if (result == 'deleted' && mounted) {
+                context
+                    .pop(); // Go back to previous screen if patient was deleted
+              }
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Chargement du patient...')
@@ -111,23 +123,7 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
   }
 
   Widget _buildPatientHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.spacingLg),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppConstants.radiusXl),
-          bottomRight: Radius.circular(AppConstants.radiusXl),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.line,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+    return GradientHeader(
       child: Column(
         children: [
           // Avatar
@@ -135,14 +131,14 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+              color: AppColors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(AppConstants.radiusLg),
             ),
             child: Center(
               child: Text(
                 _patient!.initials,
                 style: AppTextStyles.h2.copyWith(
-                  color: AppColors.primaryDark,
+                  color: AppColors.white,
                 ),
               ),
             ),
@@ -152,7 +148,7 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
           // Name
           Text(
             _patient!.fullName,
-            style: AppTextStyles.h3,
+            style: AppTextStyles.h3.copyWith(color: AppColors.white),
           ),
           const SizedBox(height: AppConstants.spacingXs),
 
@@ -163,12 +159,13 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
               Icon(
                 _patient!.sex == 'M' ? Icons.male : Icons.female,
                 size: AppConstants.iconMd,
-                color: AppColors.inkSoft,
+                color: AppColors.white.withValues(alpha: 0.85),
               ),
               const SizedBox(width: AppConstants.spacingXxs),
               Text(
                 '${_patient!.sex == 'M' ? 'Homme' : 'Femme'} · ${_patient!.approximateAge ?? '?'} ans',
-                style: AppTextStyles.secondary,
+                style: AppTextStyles.secondary
+                    .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
               ),
             ],
           ),
@@ -178,15 +175,16 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on,
                 size: AppConstants.iconSm,
-                color: AppColors.inkSoft,
+                color: AppColors.white.withValues(alpha: 0.85),
               ),
               const SizedBox(width: AppConstants.spacingXxs),
               Text(
                 _patient!.village,
-                style: AppTextStyles.secondary,
+                style: AppTextStyles.secondary
+                    .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
               ),
             ],
           ),
@@ -199,12 +197,12 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
               vertical: AppConstants.spacingXxs,
             ),
             decoration: BoxDecoration(
-              color: AppColors.sand,
-              borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+              color: AppColors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(AppConstants.radiusPill),
             ),
             child: Text(
               'Dossier #${_patient!.id}',
-              style: AppTextStyles.caption,
+              style: AppTextStyles.caption.copyWith(color: AppColors.white),
             ),
           ),
         ],
@@ -316,12 +314,20 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
   }) {
     return InkWell(
       onTap: () => _onActionPressed(action),
-      borderRadius: BorderRadius.circular(AppConstants.radiusLg),
+      borderRadius: BorderRadius.circular(AppConstants.radiusXl),
       child: Container(
         decoration: BoxDecoration(
           color: isPrimary ? color : AppColors.white,
-          borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-          border: isPrimary ? null : Border.all(color: AppColors.line),
+          borderRadius: BorderRadius.circular(AppConstants.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: isPrimary
+                  ? color.withValues(alpha: 0.3)
+                  : AppColors.shadowSoft,
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(AppConstants.spacingMd),
         child: Column(

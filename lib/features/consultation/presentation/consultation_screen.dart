@@ -6,6 +6,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_button.dart';
+import '../data/api_consultation_repository.dart';
+import '../domain/consultation.dart';
 
 /// New consultation screen with 4-step progressive form
 class ConsultationScreen extends ConsumerStatefulWidget {
@@ -21,8 +23,10 @@ class ConsultationScreen extends ConsumerStatefulWidget {
 }
 
 class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
+  final ApiConsultationRepository _repository = ApiConsultationRepository();
   int _currentStep = 1;
   static const int _totalSteps = 4;
+  bool _isSaving = false;
 
   // Form data
   String? _selectedReason;
@@ -102,17 +106,54 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Save consultation to repository with all form data
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Consultation enregistrée')),
-              );
-              context.pop();
+              _saveConsultation();
             },
             child: Text('Oui', style: AppTextStyles.label),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _saveConsultation() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    final now = DateTime.now();
+    final consultation = Consultation(
+      id: '',
+      patientId: widget.patientId,
+      date: now,
+      reason: _selectedReason ?? 'Autre',
+      diagnosis: _diagnosis,
+      prescription: _prescription,
+      temperature: _temperature,
+      systolicBP: _systolicBP,
+      diastolicBP: _diastolicBP,
+      weight: _weight,
+      followUpDate: _followUpDate,
+      followUpMethod: _followUpMethod,
+      createdAt: now,
+    );
+
+    try {
+      await _repository.createConsultation(consultation);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Consultation enregistrée')),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '⚠️ Échec de l\'enregistrement : ${e.toString().replaceFirst('Exception: ', '')}'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -224,15 +265,23 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
                 onTap: () {
                   setState(() => _selectedReason = reason['value']);
                 },
-                borderRadius: BorderRadius.circular(AppConstants.radiusLg),
+                borderRadius: BorderRadius.circular(AppConstants.radiusXl),
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary : AppColors.white,
-                    borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.line,
-                      width: isSelected ? 2 : 1,
-                    ),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusXl),
+                    border: isSelected
+                        ? null
+                        : Border.all(color: AppColors.line),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected
+                            ? AppColors.primary.withValues(alpha: 0.3)
+                            : AppColors.shadowSoft,
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   padding: const EdgeInsets.all(AppConstants.spacingMd),
                   child: Column(
@@ -336,8 +385,14 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
       padding: const EdgeInsets.all(AppConstants.spacingMd),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(AppConstants.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSoft,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -401,7 +456,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
                 onTap: () {
                   setState(() => _diagnosis = diagnosis);
                 },
-                borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                borderRadius: BorderRadius.circular(AppConstants.radiusPill),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppConstants.spacingMd,
@@ -409,10 +464,10 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary : AppColors.white,
-                    borderRadius: BorderRadius.circular(AppConstants.radiusMd),
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.line,
-                    ),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusPill),
+                    border: isSelected
+                        ? null
+                        : Border.all(color: AppColors.line),
                   ),
                   child: Text(
                     diagnosis,
@@ -527,9 +582,11 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           Expanded(
             child: AppButton(
               text: _currentStep == _totalSteps ? 'Terminer' : 'Continuer',
-              onPressed: _selectedReason != null || _currentStep > 1
-                  ? _nextStep
-                  : null,
+              isLoading: _isSaving,
+              onPressed: _isSaving ||
+                      !(_selectedReason != null || _currentStep > 1)
+                  ? null
+                  : _nextStep,
             ),
           ),
         ],

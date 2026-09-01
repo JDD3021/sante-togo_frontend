@@ -6,6 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/widgets/gradient_header.dart';
 
 /// Login screen with PIN keypad
 ///
@@ -58,67 +59,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.spacingLg),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: AppConstants.spacingXxl),
-
-                // Logo/Brand
-                const Icon(
-                  AppIcons.localHospital,
-                  size: 80,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: AppConstants.spacingMd),
-                Text(
-                  'SANTÉ+ TOGO',
-                  style: AppTextStyles.h3,
-                ),
-                const SizedBox(height: AppConstants.spacingXxl),
-
-                // Welcome message
-                Text(
-                  'Bonjour, Agent',
-                  style: AppTextStyles.bodyMedium,
-                ),
-                const SizedBox(height: AppConstants.spacingXxl),
-
-                // PIN dots indicator
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _pinLength,
-                    (index) => _buildPinDot(index < _pin.length),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Curved gradient hero with logo and greeting
+            GradientHeader(
+              child: Column(
+                children: [
+                  const SizedBox(height: AppConstants.spacingLg),
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.18),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      AppIcons.localHospital,
+                      size: 44,
+                      color: AppColors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppConstants.spacingXl),
-
-                // Keypad
-                _buildKeypad(),
-                const SizedBox(height: AppConstants.spacingLg),
-
-                // Fingerprint button (visual only)
-                IconButton(
-                  onPressed: _onFingerprintPressed,
-                  icon: const Icon(
-                    AppIcons.fingerprint,
-                    size: 48,
-                    color: AppColors.primary,
+                  const SizedBox(height: AppConstants.spacingMd),
+                  Text(
+                    'SANTÉ+ TOGO',
+                    style: AppTextStyles.h3.copyWith(color: AppColors.white),
                   ),
-                ),
-                const SizedBox(height: AppConstants.spacingSm),
-                Text(
-                  'Utiliser l\'empreinte',
-                  style: AppTextStyles.secondary,
-                ),
-                const SizedBox(height: AppConstants.spacingXxl),
-              ],
+                  const SizedBox(height: AppConstants.spacingXs),
+                  Text(
+                    'Bonjour, Agent',
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+            Padding(
+              padding: const EdgeInsets.all(AppConstants.spacingLg),
+              child: Column(
+                children: [
+                  const SizedBox(height: AppConstants.spacingSm),
+
+                  // PIN dots indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _pinLength,
+                      (index) => _buildPinDot(index < _pin.length),
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingXl),
+
+                  // Keypad
+                  _buildKeypad(),
+                  const SizedBox(height: AppConstants.spacingLg),
+
+                  // Fingerprint button (visual only)
+                  IconButton(
+                    onPressed: _onFingerprintPressed,
+                    icon: const Icon(
+                      AppIcons.fingerprint,
+                      size: 48,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingSm),
+                  Text(
+                    'Utiliser l\'empreinte',
+                    style: AppTextStyles.secondary,
+                  ),
+                  const SizedBox(height: AppConstants.spacingLg),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -175,17 +190,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       width: 72,
       height: 72,
       margin: const EdgeInsets.all(AppConstants.spacingSm),
-      child: ElevatedButton(
-        onPressed: () => _onDigitPressed(digit),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.white,
-          foregroundColor: AppColors.ink,
-          shape: const CircleBorder(),
-          elevation: 2,
-        ),
-        child: Text(
-          digit,
-          style: AppTextStyles.h3,
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSoft,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: () => _onDigitPressed(digit),
+          customBorder: const CircleBorder(),
+          child: Center(
+            child: Text(digit, style: AppTextStyles.h3),
+          ),
         ),
       ),
     );

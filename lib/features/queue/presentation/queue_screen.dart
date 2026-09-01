@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
@@ -46,10 +47,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
   }
 
   void _onPatientTap(QueueEntry entry) {
-    // TODO: Navigate to patient record or start consultation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Patient: ${entry.patientName} - À implémenter')),
-    );
+    context.push('/patient/${entry.patientId}');
   }
 
   Color _getStatusColor(QueueStatus status) {
@@ -162,7 +160,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: _getStatusColor(entry.status),
-              borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+              borderRadius: BorderRadius.circular(AppConstants.radiusLg),
             ),
             child: Center(
               child: Text(

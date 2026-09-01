@@ -29,7 +29,7 @@ class AppBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.sand,
-        borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+        borderRadius: BorderRadius.circular(AppConstants.radiusPill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -107,33 +107,48 @@ enum StatusType {
 }
 
 /// Connection status indicator
+///
+/// [onDark] switches text/dot styling for use on the gradient hero headers.
 class ConnectionStatusBadge extends StatelessWidget {
   final bool isOnline;
+  final bool onDark;
 
   const ConnectionStatusBadge({
     super.key,
     required this.isOnline,
+    this.onDark = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: isOnline ? AppColors.primary : AppColors.accent,
-            shape: BoxShape.circle,
+    final dotColor = isOnline
+        ? (onDark ? AppColors.white : AppColors.primary)
+        : AppColors.accent;
+    final textStyle = onDark
+        ? AppTextStyles.secondary.copyWith(color: AppColors.white)
+        : AppTextStyles.secondary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.spacingSm,
+        vertical: AppConstants.spacingXxs,
+      ),
+      decoration: BoxDecoration(
+        color: onDark ? AppColors.white.withValues(alpha: 0.18) : null,
+        borderRadius: BorderRadius.circular(AppConstants.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
-        ),
-        const SizedBox(width: AppConstants.spacingXs),
-        Text(
-          isOnline ? 'En ligne' : 'Hors-ligne',
-          style: AppTextStyles.secondary,
-        ),
-      ],
+          const SizedBox(width: AppConstants.spacingXs),
+          Text(isOnline ? 'En ligne' : 'Hors-ligne', style: textStyle),
+        ],
+      ),
     );
   }
 }

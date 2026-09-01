@@ -16,6 +16,8 @@ class AppConstants {
   static const double radiusMd = 12.0;
   static const double radiusLg = 16.0;
   static const double radiusXl = 20.0;
+  static const double radiusXxl = 28.0;
+  static const double radiusPill = 999.0;
 
   // Icon sizes
   static const double iconSm = 16.0;
@@ -30,4 +32,11 @@ class AppConstants {
 
   // Touch target minimum size
   static const double touchTargetMin = 48.0;
+
+  // API Configuration
+  static const String apiBaseUrl = 'http://localhost:8000';
+  static const String apiVersion = '/api/v1';
+  static const String patientsEndpoint = '$apiVersion/patients';
+  static const String consultationsEndpoint = '$apiVersion/consultations';
+  static const String queueEndpoint = '$apiVersion/queue';
 }

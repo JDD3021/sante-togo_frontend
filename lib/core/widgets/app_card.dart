@@ -136,22 +136,27 @@ class ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd, vertical: AppConstants.spacingXs),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-        child: Container(
-          padding: const EdgeInsets.all(AppConstants.spacingLg),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(AppConstants.radiusLg),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppConstants.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppConstants.radiusXl),
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.spacingLg),
+            child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(AppConstants.spacingMd),
@@ -194,6 +199,7 @@ class ActionCard extends StatelessWidget {
                 size: AppConstants.iconSm,
               ),
             ],
+            ),
           ),
         ),
       ),

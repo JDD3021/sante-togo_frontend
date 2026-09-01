@@ -8,7 +8,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/router/app_router.dart';
-import '../data/mock_patient_repository.dart';
+import '../data/api_patient_repository.dart';
 import '../domain/patient.dart';
 
 /// Patient search screen with QR code and text search
@@ -21,7 +21,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final MockPatientRepository _repository = MockPatientRepository();
+  final ApiPatientRepository _repository = ApiPatientRepository();
   List<Patient> _searchResults = [];
   List<Patient> _recentPatients = [];
   bool _isSearching = false;
@@ -78,11 +78,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           content: Text('Simulation: QR scanné - Patient PAT001 trouvé')),
     );
     // Navigate to patient record
-    context.push('${AppRoutes.patient}/PAT001');
+    context.push('/patient/PAT001');
   }
 
   void _onPatientSelected(Patient patient) {
-    context.push('${AppRoutes.patient}/${patient.id}');
+    context.push('/patient/${patient.id}');
   }
 
   @override
@@ -140,10 +140,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              AppIcons.qrCode,
-              size: AppConstants.iconXl,
-              color: AppColors.primary,
+            Container(
+              padding: const EdgeInsets.all(AppConstants.spacingSm),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+              ),
+              child: const Icon(
+                AppIcons.qrCode,
+                size: AppConstants.iconLg,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(width: AppConstants.spacingMd),
             Text(

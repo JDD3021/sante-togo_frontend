@@ -7,7 +7,13 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/patient_search/presentation/search_screen.dart';
 import '../../features/patient_record/presentation/patient_record_screen.dart';
 import '../../features/consultation/presentation/consultation_screen.dart';
+import '../../features/consultation/presentation/consultation_history_screen.dart';
+import '../../features/consultation/presentation/treatments_screen.dart';
+import '../../features/vaccination/presentation/vaccination_screen.dart';
+import '../../features/patient_search/presentation/new_patient_screen.dart';
+import '../../features/patient_search/presentation/edit_patient_screen.dart';
 import '../../features/queue/presentation/queue_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 
 /// Route names for SANTÉ+ TOGO
 class AppRoutes {
@@ -16,9 +22,15 @@ class AppRoutes {
   static const String login = '/login';
   static const String home = '/home';
   static const String search = '/search';
+  static const String newPatient = '/patient/new';
   static const String patient = '/patient/:id';
+  static const String editPatient = '/patient/:id/edit';
   static const String consultation = '/patient/:id/consultation';
+  static const String consultationHistory = '/patient/:id/history';
+  static const String treatments = '/patient/:id/treatments';
+  static const String vaccinations = '/patient/:id/vaccinations';
   static const String queue = '/queue';
+  static const String settings = '/settings';
 }
 
 /// Router configuration for SANTÉ+ TOGO
@@ -53,6 +65,13 @@ class AppRouter {
           builder: (context, state) => const SearchScreen(),
         ),
 
+        // New patient route (must be declared before the /patient/:id route)
+        GoRoute(
+          path: AppRoutes.newPatient,
+          name: 'newPatient',
+          builder: (context, state) => const NewPatientScreen(),
+        ),
+
         // Patient record route
         GoRoute(
           path: AppRoutes.patient,
@@ -60,6 +79,16 @@ class AppRouter {
           builder: (context, state) {
             final patientId = state.pathParameters['id'] ?? '';
             return PatientRecordScreen(patientId: patientId);
+          },
+        ),
+
+        // Edit patient route
+        GoRoute(
+          path: AppRoutes.editPatient,
+          name: 'editPatient',
+          builder: (context, state) {
+            final patientId = state.pathParameters['id'] ?? '';
+            return EditPatientScreen(patientId: patientId);
           },
         ),
 
@@ -73,11 +102,48 @@ class AppRouter {
           },
         ),
 
+        // Consultation history route
+        GoRoute(
+          path: AppRoutes.consultationHistory,
+          name: 'consultationHistory',
+          builder: (context, state) {
+            final patientId = state.pathParameters['id'] ?? '';
+            return ConsultationHistoryScreen(patientId: patientId);
+          },
+        ),
+
+        // Active treatments route
+        GoRoute(
+          path: AppRoutes.treatments,
+          name: 'treatments',
+          builder: (context, state) {
+            final patientId = state.pathParameters['id'] ?? '';
+            return TreatmentsScreen(patientId: patientId);
+          },
+        ),
+
+        // Vaccination calendar route
+        GoRoute(
+          path: AppRoutes.vaccinations,
+          name: 'vaccinations',
+          builder: (context, state) {
+            final patientId = state.pathParameters['id'] ?? '';
+            return VaccinationScreen(patientId: patientId);
+          },
+        ),
+
         // Queue route
         GoRoute(
           path: AppRoutes.queue,
           name: 'queue',
           builder: (context, state) => const QueueScreen(),
+        ),
+
+        // Settings route
+        GoRoute(
+          path: AppRoutes.settings,
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     );

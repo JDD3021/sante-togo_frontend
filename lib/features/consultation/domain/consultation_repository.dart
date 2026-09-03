@@ -3,12 +3,7 @@ import 'consultation.dart';
 /// Abstract repository interface for Consultation data
 /// 
 /// This interface defines the contract for consultation data operations.
-/// Currently implemented by MockConsultationRepository with in-memory data.
-/// In future iterations, this will be replaced by ApiConsultationRepository
-/// that calls the real backend REST API.
-/// 
-/// NOTE: This is a MOCK implementation. Replace with real API calls
-/// when the backend is ready.
+/// Implemented by ApiConsultationRepository, which calls the backend REST API.
 abstract class ConsultationRepository {
   /// Get all consultations for a patient
   Future<List<Consultation>> getConsultationsByPatient(String patientId);

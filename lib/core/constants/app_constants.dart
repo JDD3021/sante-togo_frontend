@@ -34,9 +34,16 @@ class AppConstants {
   static const double touchTargetMin = 48.0;
 
   // API Configuration
-  static const String apiBaseUrl = 'http://localhost:8000';
+  // En dev: reste sur localhost:8000. En prod, injecté au build via
+  // --dart-define=API_BASE_URL=https://api.mondomaine.com (voir FRONTEND/Dockerfile)
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
   static const String apiVersion = '/api/v1';
   static const String patientsEndpoint = '$apiVersion/patients';
   static const String consultationsEndpoint = '$apiVersion/consultations';
   static const String queueEndpoint = '$apiVersion/queue';
+  static const String cardiacAnalysisEndpoint = '$apiVersion/cardiac-analysis';
+  static const String vaccinationsEndpoint = '$apiVersion/vaccinations';
 }

@@ -9,6 +9,7 @@ import '../../features/patient_record/presentation/patient_record_screen.dart';
 import '../../features/consultation/presentation/consultation_screen.dart';
 import '../../features/consultation/presentation/consultation_history_screen.dart';
 import '../../features/consultation/presentation/treatments_screen.dart';
+import '../../features/cardiac_analysis/presentation/cardiac_analysis_screen.dart';
 import '../../features/vaccination/presentation/vaccination_screen.dart';
 import '../../features/patient_search/presentation/new_patient_screen.dart';
 import '../../features/patient_search/presentation/edit_patient_screen.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String consultation = '/patient/:id/consultation';
   static const String consultationHistory = '/patient/:id/history';
   static const String treatments = '/patient/:id/treatments';
+  static const String cardiacAnalysis = '/patient/:id/cardiac-analysis';
   static const String vaccinations = '/patient/:id/vaccinations';
   static const String queue = '/queue';
   static const String settings = '/settings';
@@ -119,6 +121,20 @@ class AppRouter {
           builder: (context, state) {
             final patientId = state.pathParameters['id'] ?? '';
             return TreatmentsScreen(patientId: patientId);
+          },
+        ),
+
+        // Cardiac analysis route (CardioBeat)
+        GoRoute(
+          path: AppRoutes.cardiacAnalysis,
+          name: 'cardiacAnalysis',
+          builder: (context, state) {
+            final patientId = state.pathParameters['id'] ?? '';
+            final consultationId = state.uri.queryParameters['consultationId'];
+            return CardiacAnalysisScreen(
+              patientId: patientId,
+              consultationId: consultationId,
+            );
           },
         ),
 

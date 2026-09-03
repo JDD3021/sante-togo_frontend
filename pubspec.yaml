@@ -28,6 +28,11 @@ dependencies:
   # HTTP requests for API calls
   http: ^1.1.0
 
+  # Cardiac analysis (CardioBeat): live microphone recording + file import
+  record: ^5.2.0
+  file_picker: ^8.1.2
+  path_provider: ^2.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

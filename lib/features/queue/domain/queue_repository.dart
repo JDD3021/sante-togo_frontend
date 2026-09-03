@@ -3,12 +3,7 @@ import 'queue_entry.dart';
 /// Abstract repository interface for Queue data
 /// 
 /// This interface defines the contract for queue data operations.
-/// Currently implemented by MockQueueRepository with in-memory data.
-/// In future iterations, this will be replaced by ApiQueueRepository
-/// that calls the real backend REST API.
-/// 
-/// NOTE: This is a MOCK implementation. Replace with real API calls
-/// when the backend is ready.
+/// Implemented by ApiQueueRepository, which calls the backend REST API.
 abstract class QueueRepository {
   /// Get all queue entries for today
   Future<List<QueueEntry>> getTodayQueue();

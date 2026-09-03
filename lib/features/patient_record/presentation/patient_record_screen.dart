@@ -63,6 +63,9 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
       case 'consultation':
         context.push('/patient/${widget.patientId}/consultation');
         break;
+      case 'cardiac_analysis':
+        context.push('/patient/${widget.patientId}/cardiac-analysis');
+        break;
     }
   }
 
@@ -297,6 +300,12 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
                 color: AppColors.primary,
                 action: 'consultation',
                 isPrimary: true,
+              ),
+              _buildActionCard(
+                icon: AppIcons.heart,
+                label: 'Analyse cardiaque IA',
+                color: AppColors.sandDark,
+                action: 'cardiac_analysis',
               ),
             ],
           ),

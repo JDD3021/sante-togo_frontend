@@ -3,12 +3,7 @@ import 'patient.dart';
 /// Abstract repository interface for Patient data
 /// 
 /// This interface defines the contract for patient data operations.
-/// Currently implemented by MockPatientRepository with in-memory data.
-/// In future iterations, this will be replaced by ApiPatientRepository
-/// that calls the real backend REST API.
-/// 
-/// NOTE: This is a MOCK implementation. Replace with real API calls
-/// when the backend is ready.
+/// Implemented by ApiPatientRepository, which calls the backend REST API.
 abstract class PatientRepository {
   /// Get all patients
   Future<List<Patient>> getAllPatients();

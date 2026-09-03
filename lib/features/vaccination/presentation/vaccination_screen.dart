@@ -6,13 +6,13 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/loading_indicator.dart';
-import '../data/mock_vaccination_repository.dart';
+import '../data/api_vaccination_repository.dart';
 import '../domain/vaccination.dart';
 
 /// Vaccination calendar for a patient
 ///
-/// UI-only for the MVP: the schedule is generated from mock data since
-/// there is no vaccination endpoint on the backend yet.
+/// Backed by the SANTÉ+ backend, which auto-generates the standard PEV
+/// schedule the first time a patient's calendar is requested.
 class VaccinationScreen extends ConsumerStatefulWidget {
   final String patientId;
 
@@ -23,7 +23,7 @@ class VaccinationScreen extends ConsumerStatefulWidget {
 }
 
 class _VaccinationScreenState extends ConsumerState<VaccinationScreen> {
-  final MockVaccinationRepository _repository = MockVaccinationRepository();
+  final ApiVaccinationRepository _repository = ApiVaccinationRepository();
   List<Vaccination> _schedule = [];
   bool _isLoading = true;
 

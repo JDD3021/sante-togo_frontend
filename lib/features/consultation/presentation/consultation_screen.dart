@@ -167,6 +167,14 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
         ),
         backgroundColor: AppColors.screenBg,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.monitor_heart_outlined),
+            tooltip: 'Analyse cardiaque IA',
+            onPressed: () =>
+                context.push('/patient/${widget.patientId}/cardiac-analysis'),
+          ),
+        ],
       ),
       body: Column(
         children: [

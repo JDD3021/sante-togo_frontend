@@ -8,7 +8,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/loading_indicator.dart';
-import '../data/mock_queue_repository.dart';
+import '../data/api_queue_repository.dart';
 import '../domain/queue_entry.dart';
 
 /// Queue screen with patient list
@@ -20,7 +20,7 @@ class QueueScreen extends ConsumerStatefulWidget {
 }
 
 class _QueueScreenState extends ConsumerState<QueueScreen> {
-  final MockQueueRepository _repository = MockQueueRepository();
+  final ApiQueueRepository _repository = ApiQueueRepository();
   List<QueueEntry> _queue = [];
   bool _isLoading = true;
   int _queueCount = 0;

@@ -6,14 +6,14 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/loading_indicator.dart';
-import '../data/mock_consultation_repository.dart';
+import '../data/api_consultation_repository.dart';
 import '../domain/consultation.dart';
 
 /// Active treatments for a patient
 ///
 /// Derived from consultation prescriptions (no dedicated treatment endpoint
 /// yet). A treatment is considered "active" while its follow-up date hasn't
-/// passed, "à surveiller" once it has, matching the same mock data source
+/// passed, "à surveiller" once it has, matching the same data source
 /// as the consultation history screen.
 class TreatmentsScreen extends ConsumerStatefulWidget {
   final String patientId;
@@ -25,7 +25,7 @@ class TreatmentsScreen extends ConsumerStatefulWidget {
 }
 
 class _TreatmentsScreenState extends ConsumerState<TreatmentsScreen> {
-  final MockConsultationRepository _repository = MockConsultationRepository();
+  final ApiConsultationRepository _repository = ApiConsultationRepository();
   List<Consultation> _treatments = [];
   bool _isLoading = true;
 

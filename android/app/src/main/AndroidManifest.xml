@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Micro requis pour l'enregistrement en direct d'un son cardiaque (Analyse cardiaque IA) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="sante_plus_togo"
         android:name="${applicationName}"

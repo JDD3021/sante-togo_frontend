@@ -7,6 +7,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../data/api_consultation_repository.dart';
 import '../domain/consultation.dart';
+import '../../../core/network/api_exception.dart';
 
 /// Consultation history for a patient
 class ConsultationHistoryScreen extends ConsumerStatefulWidget {
@@ -24,6 +25,7 @@ class _ConsultationHistoryScreenState
   final ApiConsultationRepository _repository = ApiConsultationRepository();
   List<Consultation> _consultations = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -32,14 +34,26 @@ class _ConsultationHistoryScreenState
   }
 
   Future<void> _load() async {
-    setState(() => _isLoading = true);
-    final results =
-        await _repository.getConsultationsByPatient(widget.patientId);
-    results.sort((a, b) => b.date.compareTo(a.date));
     setState(() {
-      _consultations = results;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final results =
+          await _repository.getConsultationsByPatient(widget.patientId);
+      results.sort((a, b) => b.date.compareTo(a.date));
+      if (!mounted) return;
+      setState(() {
+        _consultations = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   @override
@@ -53,7 +67,9 @@ class _ConsultationHistoryScreenState
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Chargement...')
-          : _consultations.isEmpty
+          : _errorMessage != null
+              ? ErrorState(message: _errorMessage!, onRetry: _load)
+              : _consultations.isEmpty
               ? const EmptyState(
                   icon: AppIcons.calendar,
                   title: 'Aucune consultation',

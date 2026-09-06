@@ -8,6 +8,7 @@ import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../data/api_vaccination_repository.dart';
 import '../domain/vaccination.dart';
+import '../../../core/network/api_exception.dart';
 
 /// Vaccination calendar for a patient
 ///
@@ -26,6 +27,7 @@ class _VaccinationScreenState extends ConsumerState<VaccinationScreen> {
   final ApiVaccinationRepository _repository = ApiVaccinationRepository();
   List<Vaccination> _schedule = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -34,12 +36,24 @@ class _VaccinationScreenState extends ConsumerState<VaccinationScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _isLoading = true);
-    final schedule = await _repository.getScheduleForPatient(widget.patientId);
     setState(() {
-      _schedule = schedule;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final schedule = await _repository.getScheduleForPatient(widget.patientId);
+      if (!mounted) return;
+      setState(() {
+        _schedule = schedule;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   static const _months = [
@@ -63,7 +77,9 @@ class _VaccinationScreenState extends ConsumerState<VaccinationScreen> {
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Chargement...')
-          : _schedule.isEmpty
+          : _errorMessage != null
+              ? ErrorState(message: _errorMessage!, onRetry: _load)
+              : _schedule.isEmpty
               ? const EmptyState(
                   icon: AppIcons.baby,
                   title: 'Aucun calendrier',

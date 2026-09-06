@@ -8,6 +8,7 @@ import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../data/api_consultation_repository.dart';
 import '../domain/consultation.dart';
+import '../../../core/network/api_exception.dart';
 
 /// Active treatments for a patient
 ///
@@ -28,6 +29,7 @@ class _TreatmentsScreenState extends ConsumerState<TreatmentsScreen> {
   final ApiConsultationRepository _repository = ApiConsultationRepository();
   List<Consultation> _treatments = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -36,17 +38,29 @@ class _TreatmentsScreenState extends ConsumerState<TreatmentsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _isLoading = true);
-    final results =
-        await _repository.getConsultationsByPatient(widget.patientId);
-    final withPrescription = results
-        .where((c) => c.prescription != null && c.prescription!.isNotEmpty)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
     setState(() {
-      _treatments = withPrescription;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final results =
+          await _repository.getConsultationsByPatient(widget.patientId);
+      final withPrescription = results
+          .where((c) => c.prescription != null && c.prescription!.isNotEmpty)
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+      if (!mounted) return;
+      setState(() {
+        _treatments = withPrescription;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   bool _isActive(Consultation c) {
@@ -66,7 +80,9 @@ class _TreatmentsScreenState extends ConsumerState<TreatmentsScreen> {
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Chargement...')
-          : _treatments.isEmpty
+          : _errorMessage != null
+              ? ErrorState(message: _errorMessage!, onRetry: _load)
+              : _treatments.isEmpty
               ? const EmptyState(
                   icon: AppIcons.pill,
                   title: 'Aucun traitement',

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../domain/queue_entry.dart';
 import '../domain/queue_repository.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/network/api_exception.dart';
 import '../../patient_search/data/api_patient_repository.dart';
 import '../../patient_search/domain/patient_repository.dart';
 
@@ -27,74 +28,132 @@ class ApiQueueRepository implements QueueRepository {
 
   @override
   Future<List<QueueEntry>> getTodayQueue() async {
-    final response = await client.get(
-      Uri.parse('$baseUrl${AppConstants.queueEndpoint}/?limit=100'),
-    );
-    if (response.statusCode != 200) {
-      throw Exception(_extractErrorDetail(response));
-    }
-    final Map<String, dynamic> jsonData = json.decode(response.body);
-    final List<dynamic> items = jsonData['items'] as List;
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/?limit=100'),
+      );
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: "Chargement de la file d'attente");
+      }
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
 
-    final entries = <QueueEntry>[];
-    for (var i = 0; i < items.length; i++) {
-      entries.add(await _fromJson(items[i], orderNumber: i + 1));
+      final entries = <QueueEntry>[];
+      for (var i = 0; i < items.length; i++) {
+        entries.add(await _fromJson(items[i], orderNumber: i + 1));
+      }
+      return entries;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: "Chargement de la file d'attente");
     }
-    return entries;
   }
 
   @override
   Future<QueueEntry?> getQueueEntryById(String id) async {
-    final response = await client.get(
-      Uri.parse('$baseUrl${AppConstants.queueEndpoint}/$id'),
-    );
-    if (response.statusCode == 200) {
-      return _fromJson(json.decode(response.body), orderNumber: 0);
-    } else if (response.statusCode == 404) {
-      return null;
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/$id'),
+      );
+      if (response.statusCode == 200) {
+        return _fromJson(json.decode(response.body), orderNumber: 0);
+      } else if (response.statusCode == 404) {
+        return null;
+      }
+      throw apiExceptionFromResponse(response, action: "Chargement de l'entrée de file");
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: "Chargement de l'entrée de file");
     }
-    throw Exception(_extractErrorDetail(response));
   }
 
   @override
   Future<QueueEntry> addToQueue(QueueEntry entry) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl${AppConstants.queueEndpoint}/'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'patient_id': int.parse(entry.patientId),
-        'notes': entry.notes,
-      }),
-    );
-    if (response.statusCode == 201) {
-      return _fromJson(json.decode(response.body), orderNumber: 0);
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'patient_id': int.parse(entry.patientId),
+          'notes': entry.notes,
+        }),
+      );
+      if (response.statusCode == 201) {
+        return _fromJson(json.decode(response.body), orderNumber: 0);
+      }
+      throw apiExceptionFromResponse(response, action: 'Ajout à la file');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Ajout à la file');
     }
-    throw Exception(_extractErrorDetail(response));
   }
 
   @override
   Future<QueueEntry> updateQueueEntry(QueueEntry entry) async {
-    final response = await client.put(
-      Uri.parse('$baseUrl${AppConstants.queueEndpoint}/${entry.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'status': _statusToApi(entry.status),
-        'notes': entry.notes,
-      }),
-    );
-    if (response.statusCode == 200) {
-      return _fromJson(json.decode(response.body), orderNumber: 0);
+    try {
+      final response = await client.put(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/${entry.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': _statusToApi(entry.status),
+          'notes': entry.notes,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return _fromJson(json.decode(response.body), orderNumber: 0);
+      }
+      throw apiExceptionFromResponse(response, action: "Mise à jour de l'entrée de file");
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: "Mise à jour de l'entrée de file");
     }
-    throw Exception(_extractErrorDetail(response));
+  }
+
+  @override
+  Future<QueueEntry> startConsultation(String id) => _postAction(id, 'start');
+
+  @override
+  Future<QueueEntry> completeConsultation(String id) => _postAction(id, 'complete');
+
+  @override
+  Future<QueueEntry> cancelEntry(String id) => _postAction(id, 'cancel');
+
+  /// Calls one of the backend's dedicated `/queue/{id}/<action>` endpoints,
+  /// which — unlike the generic `PUT /queue/{id}` — record `start_time` /
+  /// `completion_time` server-side.
+  Future<QueueEntry> _postAction(String id, String action) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/$id/$action'),
+      );
+      if (response.statusCode == 200) {
+        return _fromJson(json.decode(response.body), orderNumber: 0);
+      }
+      throw apiExceptionFromResponse(response, action: "Mise à jour de l'entrée de file");
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: "Mise à jour de l'entrée de file");
+    }
   }
 
   @override
   Future<void> removeFromQueue(String id) async {
-    final response = await client.delete(
-      Uri.parse('$baseUrl${AppConstants.queueEndpoint}/$id'),
-    );
-    if (response.statusCode != 204) {
-      throw Exception(_extractErrorDetail(response));
+    try {
+      final response = await client.delete(
+        Uri.parse('$baseUrl${AppConstants.queueEndpoint}/$id'),
+      );
+      if (response.statusCode != 204) {
+        throw apiExceptionFromResponse(response, action: 'Retrait de la file');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Retrait de la file');
     }
   }
 
@@ -186,17 +245,5 @@ class ApiQueueRepository implements QueueRepository {
           : null,
       notes: json['notes'] as String?,
     );
-  }
-
-  String _extractErrorDetail(http.Response response) {
-    try {
-      final body = json.decode(response.body);
-      if (body is Map && body['detail'] is String) {
-        return body['detail'] as String;
-      }
-    } catch (_) {
-      // Response body wasn't JSON; fall through to the generic message.
-    }
-    return 'Erreur ${response.statusCode}';
   }
 }

@@ -17,6 +17,15 @@ abstract class QueueRepository {
   /// Update queue entry status
   Future<QueueEntry> updateQueueEntry(QueueEntry entry);
 
+  /// Start the consultation for this entry (backend records `start_time`)
+  Future<QueueEntry> startConsultation(String id);
+
+  /// Mark the consultation as completed (backend records `completion_time`)
+  Future<QueueEntry> completeConsultation(String id);
+
+  /// Cancel this queue entry
+  Future<QueueEntry> cancelEntry(String id);
+
   /// Remove from queue
   Future<void> removeFromQueue(String id);
 

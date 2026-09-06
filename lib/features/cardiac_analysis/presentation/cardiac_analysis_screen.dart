@@ -3,8 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -16,6 +18,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../data/api_cardiac_analysis_repository.dart';
 import '../domain/cardiac_analysis.dart';
+import '../../../core/network/api_exception.dart';
 
 /// Screen to capture (record or import) a heart sound and analyze it via
 /// CardioBeat, then display the result and the patient's analysis history.
@@ -96,9 +99,16 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
       return;
     }
 
-    final dir = await getTemporaryDirectory();
-    final path =
-        '${dir.path}/cardiac_${DateTime.now().millisecondsSinceEpoch}.wav';
+    // On web, `record` captures straight to an in-memory blob and ignores
+    // this path — there's no real filesystem to write to (path_provider has
+    // no web implementation), so we only build a real temp path natively.
+    final String path;
+    if (kIsWeb) {
+      path = 'cardiac_${DateTime.now().millisecondsSinceEpoch}.wav';
+    } else {
+      final dir = await getTemporaryDirectory();
+      path = '${dir.path}/cardiac_${DateTime.now().millisecondsSinceEpoch}.wav';
+    }
 
     await _audioRecorder.start(
       const RecordConfig(encoder: AudioEncoder.wav),
@@ -131,11 +141,24 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
     final resolvedPath = path ?? _recordingPath;
     if (resolvedPath == null) return;
 
-    final bytes = await File(resolvedPath).readAsBytes();
-    setState(() {
-      _capturedAudio = bytes;
-      _capturedFilename = 'enregistrement.wav';
-    });
+    try {
+      // On web, `path` is a blob: URL created by the browser for the
+      // recording — fetching it (same-origin, in-memory) hands back the
+      // actual bytes. Natively it's a real file on disk.
+      final bytes = kIsWeb
+          ? (await http.get(Uri.parse(resolvedPath))).bodyBytes
+          : await File(resolvedPath).readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _capturedAudio = bytes;
+        _capturedFilename = 'enregistrement.wav';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Impossible de récupérer l\'enregistrement. Réessayez.';
+      });
+    }
   }
 
   Future<void> _pickFile() async {
@@ -184,7 +207,7 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
       if (!mounted) return;
       setState(() {
         _isAnalyzing = false;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
       });
     }
   }

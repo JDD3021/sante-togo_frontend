@@ -8,6 +8,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_button.dart';
 import '../data/api_consultation_repository.dart';
 import '../domain/consultation.dart';
+import '../../../core/network/api_exception.dart';
 
 /// New consultation screen with 4-step progressive form
 class ConsultationScreen extends ConsumerStatefulWidget {
@@ -149,7 +150,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '⚠️ Échec de l\'enregistrement : ${e.toString().replaceFirst('Exception: ', '')}'),
+              '⚠️ ${e is ApiException ? e.message : 'Échec de l\'enregistrement. Réessayez.'}'),
           backgroundColor: AppColors.red,
         ),
       );

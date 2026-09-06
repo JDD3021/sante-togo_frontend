@@ -1,0 +1,14 @@
+build/
+.dart_tool/
+.idea/
+.vscode/
+android/.gradle
+android/local.properties
+ios/Pods
+ios/.symlinks
+ios/Flutter/Flutter.framework
+macos/Pods
+.git
+.gitignore
+*.log
+*.md

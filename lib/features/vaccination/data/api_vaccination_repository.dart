@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../domain/vaccination.dart';
 import '../domain/vaccination_repository.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/network/api_exception.dart';
 
 /// API implementation of VaccinationRepository
 ///
@@ -20,15 +21,21 @@ class ApiVaccinationRepository implements VaccinationRepository {
 
   @override
   Future<List<Vaccination>> getScheduleForPatient(String patientId) async {
-    final response = await client.get(
-      Uri.parse('$baseUrl${AppConstants.vaccinationsEndpoint}/patient/$patientId'),
-    );
-    if (response.statusCode != 200) {
-      throw Exception(_extractErrorDetail(response));
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl${AppConstants.vaccinationsEndpoint}/patient/$patientId'),
+      );
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Chargement du calendrier vaccinal');
+      }
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
+      return items.map((item) => _fromJson(item)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Chargement du calendrier vaccinal');
     }
-    final Map<String, dynamic> jsonData = json.decode(response.body);
-    final List<dynamic> items = jsonData['items'] as List;
-    return items.map((item) => _fromJson(item)).toList();
   }
 
   @override
@@ -36,19 +43,25 @@ class ApiVaccinationRepository implements VaccinationRepository {
     String vaccinationId, {
     DateTime? administeredDate,
   }) async {
-    final response = await client.put(
-      Uri.parse('$baseUrl${AppConstants.vaccinationsEndpoint}/$vaccinationId'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        if (administeredDate != null)
-          'administered_date':
-              administeredDate.toIso8601String().split('T').first,
-      }),
-    );
-    if (response.statusCode != 200) {
-      throw Exception(_extractErrorDetail(response));
+    try {
+      final response = await client.put(
+        Uri.parse('$baseUrl${AppConstants.vaccinationsEndpoint}/$vaccinationId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          if (administeredDate != null)
+            'administered_date':
+                administeredDate.toIso8601String().split('T').first,
+        }),
+      );
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Mise à jour de la vaccination');
+      }
+      return _fromJson(json.decode(response.body));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Mise à jour de la vaccination');
     }
-    return _fromJson(json.decode(response.body));
   }
 
   Vaccination _fromJson(Map<String, dynamic> json) {
@@ -62,17 +75,5 @@ class ApiVaccinationRepository implements VaccinationRepository {
           ? DateTime.parse(json['administered_date'] as String)
           : null,
     );
-  }
-
-  String _extractErrorDetail(http.Response response) {
-    try {
-      final body = json.decode(response.body);
-      if (body is Map && body['detail'] is String) {
-        return body['detail'] as String;
-      }
-    } catch (_) {
-      // Response body wasn't JSON; fall through to the generic message.
-    }
-    return 'Erreur ${response.statusCode}';
   }
 }

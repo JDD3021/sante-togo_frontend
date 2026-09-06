@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../domain/patient.dart';
 import '../domain/patient_repository.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../core/network/api_exception.dart';
 
 /// API implementation of PatientRepository
 ///
@@ -21,18 +22,18 @@ class ApiPatientRepository implements PatientRepository {
   Future<List<Patient>> getAllPatients() async {
     try {
       final response = await client.get(
-        Uri.parse('$baseUrl${AppConstants.patientsEndpoint}?limit=100'),
+        Uri.parse('$baseUrl${AppConstants.patientsEndpoint}/?limit=100'),
       );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        final List<dynamic> items = jsonData['items'] as List;
-        return items.map((json) => _fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load patients: ${response.statusCode}');
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Chargement des patients');
       }
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
+      return items.map((json) => _fromJson(json)).toList();
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error fetching patients: $e');
+      throw apiExceptionFromError(e, action: 'Chargement des patients');
     }
   }
 
@@ -48,11 +49,12 @@ class ApiPatientRepository implements PatientRepository {
         return _fromJson(jsonData);
       } else if (response.statusCode == 404) {
         return null;
-      } else {
-        throw Exception('Failed to load patient: ${response.statusCode}');
       }
+      throw apiExceptionFromResponse(response, action: 'Chargement du patient');
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error fetching patient: $e');
+      throw apiExceptionFromError(e, action: 'Chargement du patient');
     }
   }
 
@@ -63,16 +65,16 @@ class ApiPatientRepository implements PatientRepository {
         Uri.parse(
             '$baseUrl${AppConstants.patientsEndpoint}/search/$query?limit=100'),
       );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        final List<dynamic> items = jsonData['items'] as List;
-        return items.map((json) => _fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to search patients: ${response.statusCode}');
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Recherche de patients');
       }
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
+      return items.map((json) => _fromJson(json)).toList();
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error searching patients: $e');
+      throw apiExceptionFromError(e, action: 'Recherche de patients');
     }
   }
 
@@ -80,50 +82,38 @@ class ApiPatientRepository implements PatientRepository {
   Future<List<Patient>> getRecentlyViewed(int limit) async {
     try {
       final response = await client.get(
-        Uri.parse('$baseUrl${AppConstants.patientsEndpoint}?limit=$limit'),
+        Uri.parse('$baseUrl${AppConstants.patientsEndpoint}/?limit=$limit'),
       );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        final List<dynamic> items = jsonData['items'] as List;
-        return items.map((json) => _fromJson(json)).toList();
-      } else {
-        throw Exception(
-            'Failed to load recent patients: ${response.statusCode}');
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Chargement des patients récents');
       }
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
+      return items.map((json) => _fromJson(json)).toList();
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error fetching recent patients: $e');
+      throw apiExceptionFromError(e, action: 'Chargement des patients récents');
     }
   }
 
   @override
   Future<Patient> createPatient(Patient patient) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl${AppConstants.patientsEndpoint}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(_toJson(patient)),
-    );
-
-    if (response.statusCode == 201) {
-      final jsonData = json.decode(response.body);
-      return _fromJson(jsonData);
-    }
-    throw Exception(_extractErrorDetail(response));
-  }
-
-  /// Extracts the FastAPI `{"detail": "..."}` message from an error
-  /// response, falling back to the status code if the body isn't shaped
-  /// as expected.
-  String _extractErrorDetail(http.Response response) {
     try {
-      final body = json.decode(response.body);
-      if (body is Map && body['detail'] is String) {
-        return body['detail'] as String;
+      final response = await client.post(
+        Uri.parse('$baseUrl${AppConstants.patientsEndpoint}/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(_toJson(patient)),
+      );
+      if (response.statusCode == 201) {
+        return _fromJson(json.decode(response.body));
       }
-    } catch (_) {
-      // Response body wasn't JSON; fall through to the generic message.
+      throw apiExceptionFromResponse(response, action: 'Création du patient');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Création du patient');
     }
-    return 'Erreur ${response.statusCode}';
   }
 
   @override
@@ -136,13 +126,13 @@ class ApiPatientRepository implements PatientRepository {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        return _fromJson(jsonData);
-      } else {
-        throw Exception('Failed to update patient: ${response.statusCode}');
+        return _fromJson(json.decode(response.body));
       }
+      throw apiExceptionFromResponse(response, action: 'Modification du patient');
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error updating patient: $e');
+      throw apiExceptionFromError(e, action: 'Modification du patient');
     }
   }
 
@@ -152,12 +142,13 @@ class ApiPatientRepository implements PatientRepository {
       final response = await client.delete(
         Uri.parse('$baseUrl${AppConstants.patientsEndpoint}/$id'),
       );
-
       if (response.statusCode != 204) {
-        throw Exception('Failed to delete patient: ${response.statusCode}');
+        throw apiExceptionFromResponse(response, action: 'Suppression du patient');
       }
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error deleting patient: $e');
+      throw apiExceptionFromError(e, action: 'Suppression du patient');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +8,11 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/router/app_router.dart';
 import '../data/api_patient_repository.dart';
 import '../domain/patient.dart';
+import '../../../core/network/api_exception.dart';
 
 /// Patient search screen with QR code and text search
 class SearchScreen extends ConsumerStatefulWidget {
@@ -26,6 +29,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   List<Patient> _recentPatients = [];
   bool _isSearching = false;
   bool _isLoading = true;
+  String? _errorMessage;
+  Timer? _debounce;
+  int _searchRequestId = 0;
 
   @override
   void initState() {
@@ -36,38 +42,71 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadRecentPatients() async {
-    setState(() => _isLoading = true);
-    final recent = await _repository.getRecentlyViewed(5);
     setState(() {
-      _recentPatients = recent;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final recent = await _repository.getRecentlyViewed(5);
+      if (!mounted) return;
+      setState(() {
+        _recentPatients = recent;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   void _onSearchChanged() {
     final query = _searchController.text.trim();
+    _debounce?.cancel();
+
     if (query.isEmpty) {
+      _searchRequestId++; // invalidate any in-flight search
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _errorMessage = null;
       });
-    } else {
-      _performSearch(query);
+      return;
     }
+
+    // Wait for a pause in typing before hitting the API, instead of firing
+    // a request on every keystroke.
+    setState(() => _isSearching = true);
+    _debounce = Timer(const Duration(milliseconds: 350), () => _performSearch(query));
   }
 
   Future<void> _performSearch(String query) async {
-    setState(() => _isSearching = true);
-    final results = await _repository.searchPatients(query);
-    setState(() {
-      _searchResults = results;
-      _isSearching = false;
-    });
+    final requestId = ++_searchRequestId;
+    setState(() => _errorMessage = null);
+    try {
+      final results = await _repository.searchPatients(query);
+      // A newer keystroke may have started another search while this one
+      // was in flight; ignore this response if it's no longer the latest.
+      if (!mounted || requestId != _searchRequestId) return;
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
+    } catch (e) {
+      if (!mounted || requestId != _searchRequestId) return;
+      setState(() {
+        _isSearching = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   void _onScanQR() {
@@ -186,11 +225,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildResults() {
     if (_isLoading) {
-      return const LoadingIndicator(message: 'Chargement...');
+      return const SkeletonList();
     }
 
     if (_isSearching) {
-      return const LoadingIndicator(message: 'Recherche...');
+      return const SkeletonList(count: 3);
+    }
+
+    if (_errorMessage != null) {
+      return ErrorState(
+        message: _errorMessage!,
+        onRetry: _searchController.text.trim().isEmpty
+            ? _loadRecentPatients
+            : () => _performSearch(_searchController.text.trim()),
+      );
     }
 
     if (_searchController.text.isNotEmpty) {

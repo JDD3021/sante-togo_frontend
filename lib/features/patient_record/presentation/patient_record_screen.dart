@@ -10,6 +10,9 @@ import '../../../core/widgets/gradient_header.dart';
 import '../../../core/router/app_router.dart';
 import '../../patient_search/data/api_patient_repository.dart';
 import '../../patient_search/domain/patient.dart';
+import '../../../core/network/api_exception.dart';
+import '../../queue/data/api_queue_repository.dart';
+import '../../queue/domain/queue_entry.dart';
 
 /// Patient record screen with action grid
 class PatientRecordScreen extends ConsumerStatefulWidget {
@@ -27,8 +30,11 @@ class PatientRecordScreen extends ConsumerStatefulWidget {
 
 class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
   final ApiPatientRepository _repository = ApiPatientRepository();
+  final ApiQueueRepository _queueRepository = ApiQueueRepository();
   Patient? _patient;
   bool _isLoading = true;
+  String? _errorMessage;
+  bool _isAddingToQueue = false;
 
   @override
   void initState() {
@@ -41,12 +47,24 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
   }
 
   Future<void> _loadPatient() async {
-    setState(() => _isLoading = true);
-    final patient = await _repository.getPatientById(widget.patientId);
     setState(() {
-      _patient = patient;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final patient = await _repository.getPatientById(widget.patientId);
+      if (!mounted) return;
+      setState(() {
+        _patient = patient;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Une erreur inattendue est survenue.';
+      });
+    }
   }
 
   void _onActionPressed(String action) {
@@ -66,6 +84,45 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
       case 'cardiac_analysis':
         context.push('/patient/${widget.patientId}/cardiac-analysis');
         break;
+      case 'queue':
+        _addToQueue();
+        break;
+    }
+  }
+
+  Future<void> _addToQueue() async {
+    if (_isAddingToQueue || _patient == null) return;
+    setState(() => _isAddingToQueue = true);
+    try {
+      await _queueRepository.addToQueue(
+        QueueEntry(
+          id: '',
+          patientId: widget.patientId,
+          patientName: _patient!.fullName,
+          patientVillage: _patient!.village,
+          orderNumber: 0,
+          status: QueueStatus.waiting,
+          arrivalTime: DateTime.now(),
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_patient!.fullName} ajouté(e) à la file d\'attente'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '⚠️ ${e is ApiException ? e.message : 'Échec de l\'ajout à la file. Réessayez.'}'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isAddingToQueue = false);
     }
   }
 
@@ -98,13 +155,15 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Chargement du patient...')
-          : _patient == null
-              ? const EmptyState(
-                  icon: AppIcons.person,
-                  title: 'Patient non trouvé',
-                  subtitle: 'Ce patient n\'existe pas dans la base',
-                )
-              : _buildPatientContent(),
+          : _errorMessage != null
+              ? ErrorState(message: _errorMessage!, onRetry: _loadPatient)
+              : _patient == null
+                  ? const EmptyState(
+                      icon: AppIcons.person,
+                      title: 'Patient non trouvé',
+                      subtitle: 'Ce patient n\'existe pas dans la base',
+                    )
+                  : _buildPatientContent(),
     );
   }
 
@@ -277,6 +336,13 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
             childAspectRatio: 1.2,
             children: [
               _buildActionCard(
+                icon: AppIcons.queue,
+                label: 'Ajouter à la file',
+                color: AppColors.accent,
+                action: 'queue',
+                isLoading: _isAddingToQueue,
+              ),
+              _buildActionCard(
                 icon: AppIcons.calendar,
                 label: 'Historique',
                 color: AppColors.sandDark,
@@ -320,9 +386,10 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
     required Color color,
     required String action,
     bool isPrimary = false,
+    bool isLoading = false,
   }) {
     return InkWell(
-      onTap: () => _onActionPressed(action),
+      onTap: isLoading ? null : () => _onActionPressed(action),
       borderRadius: BorderRadius.circular(AppConstants.radiusXl),
       child: Container(
         decoration: BoxDecoration(
@@ -350,11 +417,22 @@ class _PatientRecordScreenState extends ConsumerState<PatientRecordScreen> {
                     : color.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(AppConstants.radiusMd),
               ),
-              child: Icon(
-                icon,
-                size: AppConstants.iconLg,
-                color: isPrimary ? AppColors.white : color,
-              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: AppConstants.iconLg,
+                      height: AppConstants.iconLg,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isPrimary ? AppColors.white : color,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      icon,
+                      size: AppConstants.iconLg,
+                      color: isPrimary ? AppColors.white : color,
+                    ),
             ),
             const SizedBox(height: AppConstants.spacingSm),
             Text(

@@ -35,6 +35,54 @@ class LoadingIndicator extends StatelessWidget {
   }
 }
 
+/// Error state widget: shown when a screen's data fetch fails.
+///
+/// [message] must already be a clear, user-facing sentence (see
+/// `ApiException` in `core/network/api_exception.dart`) — never a raw
+/// exception or status code.
+class ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback? onRetry;
+
+  const ErrorState({
+    super.key,
+    required this.message,
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: AppTextStyles.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: onRetry,
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Empty state widget
 class EmptyState extends StatelessWidget {
   final IconData icon;

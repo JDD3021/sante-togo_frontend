@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/app_button.dart';
 import '../data/api_patient_repository.dart';
 import '../domain/patient.dart';
+import '../../../core/network/api_exception.dart';
 
 /// New patient registration form
 class NewPatientScreen extends ConsumerStatefulWidget {
@@ -94,27 +95,9 @@ class _NewPatientScreenState extends ConsumerState<NewPatientScreen> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _errorMessage = _formatErrorMessage(e.toString());
+        _errorMessage = '⚠️ ${e is ApiException ? e.message : 'Une erreur inattendue est survenue.'}';
       });
     }
-  }
-
-  String _formatErrorMessage(String error) {
-    // Nettoyer le message d'erreur
-    String message = error.replaceFirst('Exception: ', '');
-
-    // Rendre le message plus友好
-    if (message.contains('existe déjà')) {
-      return '⚠️ Ce numéro de téléphone est déjà utilisé par un autre patient. Veuillez utiliser un autre numéro.';
-    } else if (message.contains('400')) {
-      return '⚠️ Données invalides. Veuillez vérifier les champs du formulaire.';
-    } else if (message.contains('500')) {
-      return '⚠️ Erreur serveur. Veuillez réessayer plus tard.';
-    } else if (message.contains('connexion') || message.contains('network')) {
-      return '⚠️ Problème de connexion. Vérifiez votre connexion internet.';
-    }
-
-    return '⚠️ $message';
   }
 
   void _clearError() {

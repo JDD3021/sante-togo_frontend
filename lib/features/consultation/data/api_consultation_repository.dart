@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../domain/consultation.dart';
 import '../domain/consultation_repository.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../core/network/api_exception.dart';
 
 /// API implementation of ConsultationRepository
 ///
@@ -38,15 +39,16 @@ class ApiConsultationRepository implements ConsultationRepository {
         Uri.parse(
             '$baseUrl${AppConstants.consultationsEndpoint}/patient/$patientId?limit=100'),
       );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        final List<dynamic> items = jsonData['items'] as List;
-        return items.map((json) => _fromJson(json)).toList();
+      if (response.statusCode != 200) {
+        throw apiExceptionFromResponse(response, action: 'Chargement des consultations');
       }
-      throw Exception('Failed to load consultations: ${response.statusCode}');
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      final List<dynamic> items = jsonData['items'] as List;
+      return items.map((json) => _fromJson(json)).toList();
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error fetching consultations: $e');
+      throw apiExceptionFromError(e, action: 'Chargement des consultations');
     }
   }
 
@@ -56,55 +58,71 @@ class ApiConsultationRepository implements ConsultationRepository {
       final response = await client.get(
         Uri.parse('$baseUrl${AppConstants.consultationsEndpoint}/$id'),
       );
-
       if (response.statusCode == 200) {
         return _fromJson(json.decode(response.body));
       } else if (response.statusCode == 404) {
         return null;
       }
-      throw Exception('Failed to load consultation: ${response.statusCode}');
+      throw apiExceptionFromResponse(response, action: 'Chargement de la consultation');
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Error fetching consultation: $e');
+      throw apiExceptionFromError(e, action: 'Chargement de la consultation');
     }
   }
 
   @override
   Future<Consultation> createConsultation(Consultation consultation) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl${AppConstants.consultationsEndpoint}/'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(_toJson(consultation)),
-    );
-
-    if (response.statusCode == 201) {
-      return _fromJson(json.decode(response.body));
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl${AppConstants.consultationsEndpoint}/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(_toJson(consultation)),
+      );
+      if (response.statusCode == 201) {
+        return _fromJson(json.decode(response.body));
+      }
+      throw apiExceptionFromResponse(response, action: 'Enregistrement de la consultation');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Enregistrement de la consultation');
     }
-    throw Exception(_extractErrorDetail(response));
   }
 
   @override
   Future<Consultation> updateConsultation(Consultation consultation) async {
-    final response = await client.put(
-      Uri.parse(
-          '$baseUrl${AppConstants.consultationsEndpoint}/${consultation.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(_toJson(consultation)),
-    );
-
-    if (response.statusCode == 200) {
-      return _fromJson(json.decode(response.body));
+    try {
+      final response = await client.put(
+        Uri.parse(
+            '$baseUrl${AppConstants.consultationsEndpoint}/${consultation.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(_toJson(consultation)),
+      );
+      if (response.statusCode == 200) {
+        return _fromJson(json.decode(response.body));
+      }
+      throw apiExceptionFromResponse(response, action: 'Mise à jour de la consultation');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Mise à jour de la consultation');
     }
-    throw Exception(_extractErrorDetail(response));
   }
 
   @override
   Future<void> deleteConsultation(String id) async {
-    final response = await client.delete(
-      Uri.parse('$baseUrl${AppConstants.consultationsEndpoint}/$id'),
-    );
-
-    if (response.statusCode != 204) {
-      throw Exception('Failed to delete consultation: ${response.statusCode}');
+    try {
+      final response = await client.delete(
+        Uri.parse('$baseUrl${AppConstants.consultationsEndpoint}/$id'),
+      );
+      if (response.statusCode != 204) {
+        throw apiExceptionFromResponse(response, action: 'Suppression de la consultation');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw apiExceptionFromError(e, action: 'Suppression de la consultation');
     }
   }
 
@@ -116,18 +134,6 @@ class ApiConsultationRepository implements ConsultationRepository {
     // Not exposed by the backend yet.
     throw UnimplementedError(
         'getConsultationsByDateRange is not supported by the API yet');
-  }
-
-  String _extractErrorDetail(http.Response response) {
-    try {
-      final body = json.decode(response.body);
-      if (body is Map && body['detail'] is String) {
-        return body['detail'] as String;
-      }
-    } catch (_) {
-      // Response body wasn't JSON; fall through to the generic message.
-    }
-    return 'Erreur ${response.statusCode}';
   }
 
   /// Parses a "JJ/MM/AAAA" follow-up date into an ISO 8601 string.

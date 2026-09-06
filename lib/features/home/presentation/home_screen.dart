@@ -9,6 +9,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/gradient_header.dart';
 import '../../../core/router/app_router.dart';
+import '../../queue/data/api_queue_repository.dart';
 
 /// Home screen with main navigation tiles
 class HomeScreen extends ConsumerStatefulWidget {
@@ -19,8 +20,29 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  // Mock connection status - will be real in production
-  final bool _isOnline = true;
+  final ApiQueueRepository _queueRepository = ApiQueueRepository();
+  bool _isOnline = true;
+  int? _queueCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQueueCount();
+  }
+
+  Future<void> _loadQueueCount() async {
+    try {
+      final count = await _queueRepository.getTodayQueueCount();
+      if (!mounted) return;
+      setState(() {
+        _queueCount = count;
+        _isOnline = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isOnline = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +89,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         title: 'File d\'attente',
                         icon: AppIcons.queue,
                         backgroundColor: AppColors.sandDark,
-                        subtitle: '7 patients aujourd\'hui',
+                        subtitle: _queueCount != null
+                            ? '$_queueCount patients aujourd\'hui'
+                            : 'Chargement...',
                         onTap: () => context.push(AppRoutes.queue),
                       ),
                     ],

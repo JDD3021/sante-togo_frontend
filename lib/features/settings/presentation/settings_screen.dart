@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
+import '../../auth/application/auth_provider.dart';
 
 /// Settings screen
 ///
@@ -21,8 +22,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _autoSyncEnabled = true;
 
-  void _onLogout() {
-    context.go(AppRoutes.login);
+  Future<void> _onLogout() async {
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) context.go(AppRoutes.login);
   }
 
   @override
@@ -68,6 +70,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildProfileCard() {
+    final user = ref.watch(authProvider).user;
     return Container(
       padding: const EdgeInsets.all(AppConstants.spacingLg),
       decoration: BoxDecoration(
@@ -97,9 +100,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Agent de santé', style: AppTextStyles.bodyBold),
+                Text(user?.fullName ?? user?.email ?? 'Agent de santé', style: AppTextStyles.bodyBold),
                 const SizedBox(height: AppConstants.spacingXxs),
-                Text('Centre de Santé', style: AppTextStyles.secondary),
+                Text(user?.email ?? 'Centre de Santé', style: AppTextStyles.secondary),
               ],
             ),
           ),

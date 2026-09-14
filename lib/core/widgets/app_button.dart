@@ -3,7 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../constants/app_constants.dart';
 
-/// Primary button for SANTÉ+ TOGO
+/// Primary button for Dekera
 /// 
 /// - Minimum height 48px for touch targets
 /// - Rounded corners (16px)

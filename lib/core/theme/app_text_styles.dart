@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// Centralized typography for SANTÉ+ TOGO
+/// Centralized typography for Dekera
 ///
 /// - Titles and branding: Baloo 2 (rounded, warm), weight 700-800
 /// - Interface/content text: Inter (neutral, very readable), min 16px body, 14px labels

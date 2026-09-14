@@ -3,7 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../constants/app_constants.dart';
 
-/// Standard card for SANTÉ+ TOGO
+/// Standard card for Dekera
 /// 
 /// - White background
 /// - Rounded corners (16px)

@@ -1,4 +1,4 @@
-/// Queue entry domain model for SANTÉ+ TOGO
+/// Queue entry domain model for Dekera
 /// 
 /// This model represents a patient in the waiting queue.
 /// It will be synced with the backend database in future iterations.

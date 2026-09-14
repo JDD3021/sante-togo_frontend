@@ -1,11 +1,11 @@
 {
-    "name": "sante_plus_togo",
-    "short_name": "sante_plus_togo",
+    "name": "Dekera",
+    "short_name": "Dekera",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Dekera, le soignant connecté - Dossier Médical Électronique pour les centres de santé du Togo.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

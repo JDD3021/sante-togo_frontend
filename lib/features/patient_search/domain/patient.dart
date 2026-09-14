@@ -1,4 +1,4 @@
-/// Patient domain model for SANTÉ+ TOGO
+/// Patient domain model for Dekera
 /// 
 /// This model represents a patient in the medical records system.
 /// It will be synced with the backend database in future iterations.

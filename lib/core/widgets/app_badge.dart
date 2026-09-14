@@ -3,7 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../constants/app_constants.dart';
 
-/// Badge component for SANTÉ+ TOGO
+/// Badge component for Dekera
 ///
 /// Used for status indicators, counts, and labels
 class AppBadge extends StatelessWidget {

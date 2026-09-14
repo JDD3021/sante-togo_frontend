@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color palette for SANTÉ+ TOGO
+/// Centralized color palette for Dekera
 /// 
 /// STRICT RULE: The red color (#B4362A) must ONLY be used for critical medical alerts
 /// (allergies, emergencies). Never use it for other purposes to avoid desensitization.

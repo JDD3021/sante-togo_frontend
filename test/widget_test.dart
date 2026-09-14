@@ -6,15 +6,18 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:sante_plus_togo/main.dart';
+import 'package:dekera/main.dart';
 
 void main() {
   testWidgets('App starts successfully', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const SantePlusTogoApp());
+    // Build our app (wrapped in a ProviderScope, as main() does) and trigger a frame.
+    await tester.pumpWidget(
+      const ProviderScope(child: DekeraApp()),
+    );
 
-    // Verify that the app loads
-    expect(find.text('SANTÉ+ TOGO'), findsOneWidget);
+    // Verify that the app loads on the login screen.
+    expect(find.text('DEKERA'), findsOneWidget);
   });
 }

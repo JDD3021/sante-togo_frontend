@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/auth/application/auth_provider.dart';
+
 // Import screens
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -16,7 +18,7 @@ import '../../features/patient_search/presentation/edit_patient_screen.dart';
 import '../../features/queue/presentation/queue_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
-/// Route names for SANTÉ+ TOGO
+/// Route names for Dekera
 class AppRoutes {
   AppRoutes._();
 
@@ -35,7 +37,7 @@ class AppRoutes {
   static const String settings = '/settings';
 }
 
-/// Router configuration for SANTÉ+ TOGO
+/// Router configuration for Dekera
 ///
 /// Uses go_router for navigation with named routes.
 /// This will be updated as screens are implemented.
@@ -43,8 +45,20 @@ class AppRouter {
   AppRouter._();
 
   static GoRouter createRouter(Ref ref) {
+    final authState = ref.watch(authProvider);
+
     return GoRouter(
       initialLocation: AppRoutes.login,
+      redirect: (context, state) {
+        // While the persisted session is being restored, don't redirect yet
+        // (avoids bouncing straight to /login on a cold start with a valid token).
+        if (authState.status == AuthStatus.initial) return null;
+
+        final onLoginPage = state.matchedLocation == AppRoutes.login;
+        if (!authState.isAuthenticated && !onLoginPage) return AppRoutes.login;
+        if (authState.isAuthenticated && onLoginPage) return AppRoutes.home;
+        return null;
+      },
       routes: [
         // Login route
         GoRoute(

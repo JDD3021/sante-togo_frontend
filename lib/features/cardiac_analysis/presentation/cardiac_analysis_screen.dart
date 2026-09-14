@@ -15,6 +15,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/audio_play_button.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../data/api_cardiac_analysis_repository.dart';
 import '../domain/cardiac_analysis.dart';
@@ -317,6 +318,7 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  AudioPlayButton(bytes: _capturedAudio),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: _isAnalyzing ? null : _reset,
@@ -438,6 +440,13 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    // Prefer the freshly-captured audio still in memory (right
+                    // after analyzing); fall back to the backend's stored URL.
+                    AudioPlayButton(
+                      bytes: _capturedAudio,
+                      url: _capturedAudio == null ? analysis.audioUrl : null,
+                      color: color,
                     ),
                   ],
                 ),
@@ -597,6 +606,7 @@ class _CardiacAnalysisScreenState extends ConsumerState<CardiacAnalysisScreen> {
                 '${analysis.confidence.toStringAsFixed(0)}%',
                 style: AppTextStyles.label,
               ),
+              AudioPlayButton(url: analysis.audioUrl, color: color),
             ],
           ),
         );

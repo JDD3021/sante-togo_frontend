@@ -1,4 +1,4 @@
-/// Result of an AI heart sound analysis (CardioBeat), for SANTÉ+ TOGO
+/// Result of an AI heart sound analysis (CardioBeat), for Dekera
 ///
 /// Mirrors the SANTÉ+ backend's `/api/v1/cardiac-analysis` response, which
 /// itself relays the result produced by the external CardioBeat service.

@@ -1,4 +1,4 @@
-/// Centralized constants for SANTÉ+ TOGO
+/// Centralized constants for Dekera
 class AppConstants {
   AppConstants._();
 
@@ -41,9 +41,18 @@ class AppConstants {
     defaultValue: 'http://localhost:8000',
   );
   static const String apiVersion = '/api/v1';
+  static const String authEndpoint = '$apiVersion/auth';
   static const String patientsEndpoint = '$apiVersion/patients';
   static const String consultationsEndpoint = '$apiVersion/consultations';
   static const String queueEndpoint = '$apiVersion/queue';
   static const String cardiacAnalysisEndpoint = '$apiVersion/cardiac-analysis';
   static const String vaccinationsEndpoint = '$apiVersion/vaccinations';
+
+  // Google Sign-In - Client ID OAuth "Web application" (console.cloud.google.com),
+  // requis par google_sign_in comme serverClientId pour obtenir un idToken
+  // vérifiable côté backend. Injecté au build via --dart-define=GOOGLE_CLIENT_ID=...
+  static const String googleClientId = String.fromEnvironment(
+    'GOOGLE_CLIENT_ID',
+    defaultValue: '',
+  );
 }

@@ -1,4 +1,4 @@
-/// Consultation domain model for SANTÉ+ TOGO
+/// Consultation domain model for Dekera
 /// 
 /// This model represents a medical consultation/visit.
 /// It will be synced with the backend database in future iterations.

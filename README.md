@@ -1,10 +1,10 @@
-# SANTÉ+ TOGO - Dossier Médical Électronique
+# Dekera - Dossier Médical Électronique
 
 Application Flutter de Dossier Médical Électronique (DME) pour les centres de santé du Togo.
 
 ## 📋 Description
 
-SANTÉ+ TOGO est une application mobile conçue pour les agents de santé (infirmiers, médecins, agents communautaires) travaillant dans des zones à connectivité faible ou instable. L'interface est radicalement simple avec des gros boutons, des pictogrammes, et des parcours courts (3 clics max pour une action courante).
+Dekera est une application mobile conçue pour les agents de santé (infirmiers, médecins, agents communautaires) travaillant dans des zones à connectivité faible ou instable. L'interface est radicalement simple avec des gros boutons, des pictogrammes, et des parcours courts (3 clics max pour une action courante).
 
 ## 🎯 Public Cible
 

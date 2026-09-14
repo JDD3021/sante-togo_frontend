@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// Loading indicator for SANTÉ+ TOGO
+/// Loading indicator for Dekera
 /// 
 /// Provides consistent loading states across the app
 class LoadingIndicator extends StatelessWidget {

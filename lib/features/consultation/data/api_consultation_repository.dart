@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/consultation.dart';
 import '../domain/consultation_repository.dart';
-import '../../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_exception.dart';
 
 /// API implementation of ConsultationRepository

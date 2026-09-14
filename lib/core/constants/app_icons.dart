@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Icon constants for SANTÉ+ TOGO
+/// Icon constants for Dekera
 /// 
 /// Using Material Icons for now. Can be replaced with custom SVG icons later.
 class AppIcons {

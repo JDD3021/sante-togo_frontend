@@ -7,11 +7,11 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/widgets/gradient_header.dart';
+import '../../../core/widgets/app_button.dart';
+import '../application/auth_provider.dart';
 
-/// Login screen with PIN keypad
-///
-/// This is a UI-only implementation for the MVP.
-/// Real authentication will be added in a future iteration.
+enum _LoginMode { password, otpRequest, otpVerify }
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,49 +20,61 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  String _pin = '';
-  static const int _pinLength = 4;
+  _LoginMode _mode = _LoginMode.password;
+  bool _isRegistering = false;
 
-  void _onDigitPressed(String digit) {
-    if (_pin.length < _pinLength) {
-      setState(() {
-        _pin += digit;
-      });
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _codeController = TextEditingController();
 
-      // For MVP: navigate after 4 digits regardless of value
-      if (_pin.length >= _pinLength) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            context.go(AppRoutes.home);
-          }
-        });
-      }
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _fullNameController.dispose();
+    _codeController.dispose();
+    super.dispose();
   }
 
-  void _onDeletePressed() {
-    if (_pin.isNotEmpty) {
-      setState(() {
-        _pin = _pin.substring(0, _pin.length - 1);
-      });
-    }
+  Future<void> _submitPassword() async {
+    final notifier = ref.read(authProvider.notifier);
+    final success = _isRegistering
+        ? await notifier.register(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _fullNameController.text.trim().isEmpty ? null : _fullNameController.text.trim(),
+          )
+        : await notifier.login(_emailController.text.trim(), _passwordController.text);
+    if (success && mounted) context.go(AppRoutes.home);
   }
 
-  void _onFingerprintPressed() {
-    // Visual only for MVP - real biometrics will be added later
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Empreinte digitale - Non implémenté')),
-    );
+  Future<void> _requestOtp() async {
+    final success = await ref.read(authProvider.notifier).requestOtp(_emailController.text.trim());
+    if (success && mounted) setState(() => _mode = _LoginMode.otpVerify);
+  }
+
+  Future<void> _verifyOtp() async {
+    final success = await ref
+        .read(authProvider.notifier)
+        .verifyOtp(_emailController.text.trim(), _codeController.text.trim());
+    if (success && mounted) context.go(AppRoutes.home);
+  }
+
+  Future<void> _loginWithGoogle() async {
+    final success = await ref.read(authProvider.notifier).loginWithGoogle();
+    if (success && mounted) context.go(AppRoutes.home);
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.screenBg,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Curved gradient hero with logo and greeting
             GradientHeader(
               child: Column(
                 children: [
@@ -82,8 +94,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: AppConstants.spacingMd),
                   Text(
-                    'SANTÉ+ TOGO',
+                    'DEKERA',
                     style: AppTextStyles.h3.copyWith(color: AppColors.white),
+                  ),
+                  const SizedBox(height: AppConstants.spacingXxs),
+                  Text(
+                    'Le soignant connecté',
+                    style: AppTextStyles.secondaryMedium
+                        .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
                   ),
                   const SizedBox(height: AppConstants.spacingXs),
                   Text(
@@ -94,41 +112,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(AppConstants.spacingLg),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: AppConstants.spacingSm),
-
-                  // PIN dots indicator
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _pinLength,
-                      (index) => _buildPinDot(index < _pin.length),
+                  if (authState.errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(AppConstants.spacingSm),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentLight,
+                        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                      ),
+                      child: Text(
+                        authState.errorMessage!,
+                        style: AppTextStyles.secondaryMedium.copyWith(color: AppColors.accent),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppConstants.spacingXl),
-
-                  // Keypad
-                  _buildKeypad(),
-                  const SizedBox(height: AppConstants.spacingLg),
-
-                  // Fingerprint button (visual only)
-                  IconButton(
-                    onPressed: _onFingerprintPressed,
-                    icon: const Icon(
-                      AppIcons.fingerprint,
-                      size: 48,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: AppConstants.spacingSm),
-                  Text(
-                    'Utiliser l\'empreinte',
-                    style: AppTextStyles.secondary,
-                  ),
+                    const SizedBox(height: AppConstants.spacingMd),
+                  ],
+                  if (_mode == _LoginMode.password) _buildPasswordForm(authState),
+                  if (_mode == _LoginMode.otpRequest) _buildOtpRequestForm(authState),
+                  if (_mode == _LoginMode.otpVerify) _buildOtpVerifyForm(authState),
                   const SizedBox(height: AppConstants.spacingLg),
                 ],
               ),
@@ -139,79 +145,135 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildPinDot(bool filled) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        color: filled ? AppColors.primary : AppColors.sandDark,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  Widget _buildKeypad() {
+  Widget _buildPasswordForm(AuthState authState) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ...[
-          ['1', '2', '3'],
-          ['4', '5', '6'],
-          ['7', '8', '9'],
-        ].map((row) => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: row.map((digit) => _buildKeypadButton(digit)).toList(),
-            )),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(width: 72), // Empty space for alignment
-            _buildKeypadButton('0'),
-            SizedBox(
-              width: 72,
-              height: 72,
-              child: IconButton(
-                onPressed: _onDeletePressed,
-                icon: const Icon(
-                  Icons.backspace,
-                  color: AppColors.inkSoft,
-                  size: AppConstants.iconLg,
-                ),
-              ),
-            ),
-          ],
+        Text(_isRegistering ? 'Créer un compte' : 'Connexion', style: AppTextStyles.h4),
+        const SizedBox(height: AppConstants.spacingMd),
+        if (_isRegistering) ...[
+          TextField(
+            controller: _fullNameController,
+            decoration: const InputDecoration(labelText: 'Nom complet'),
+          ),
+          const SizedBox(height: AppConstants.spacingSm),
+        ],
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        TextField(
+          controller: _passwordController,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'Mot de passe'),
+        ),
+        const SizedBox(height: AppConstants.spacingLg),
+        AppButton(
+          text: _isRegistering ? 'Créer le compte' : 'Se connecter',
+          isLoading: authState.isLoading,
+          onPressed: _submitPassword,
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        TextButton(
+          onPressed: () => setState(() => _isRegistering = !_isRegistering),
+          child: Text(
+            _isRegistering ? 'J\'ai déjà un compte' : 'Créer un compte',
+            style: AppTextStyles.secondaryMedium.copyWith(color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(height: AppConstants.spacingMd),
+        _buildDivider(),
+        const SizedBox(height: AppConstants.spacingMd),
+        AppSecondaryButton(
+          text: 'Recevoir un code par email',
+          icon: Icons.mail_outline,
+          onPressed: () => setState(() => _mode = _LoginMode.otpRequest),
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        AppSecondaryButton(
+          text: 'Continuer avec Google',
+          icon: Icons.g_mobiledata,
+          onPressed: authState.isLoading ? null : _loginWithGoogle,
         ),
       ],
     );
   }
 
-  Widget _buildKeypadButton(String digit) {
-    return Container(
-      width: 72,
-      height: 72,
-      margin: const EdgeInsets.all(AppConstants.spacingSm),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowSoft,
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: () => _onDigitPressed(digit),
-          customBorder: const CircleBorder(),
-          child: Center(
-            child: Text(digit, style: AppTextStyles.h3),
-          ),
+  Widget _buildOtpRequestForm(AuthState authState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Code par email', style: AppTextStyles.h4),
+        const SizedBox(height: AppConstants.spacingXs),
+        Text(
+          'Recevez un code de connexion à usage unique par email.',
+          style: AppTextStyles.secondary,
         ),
-      ),
+        const SizedBox(height: AppConstants.spacingMd),
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        const SizedBox(height: AppConstants.spacingLg),
+        AppButton(
+          text: 'Envoyer le code',
+          isLoading: authState.isLoading,
+          onPressed: _requestOtp,
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        TextButton(
+          onPressed: () => setState(() => _mode = _LoginMode.password),
+          child: Text('Retour', style: AppTextStyles.secondaryMedium.copyWith(color: AppColors.primary)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtpVerifyForm(AuthState authState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Entrez le code', style: AppTextStyles.h4),
+        const SizedBox(height: AppConstants.spacingXs),
+        Text(
+          'Code envoyé à ${_emailController.text.trim()}',
+          style: AppTextStyles.secondary,
+        ),
+        const SizedBox(height: AppConstants.spacingMd),
+        TextField(
+          controller: _codeController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          decoration: const InputDecoration(labelText: 'Code à 6 chiffres'),
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        AppButton(
+          text: 'Valider',
+          isLoading: authState.isLoading,
+          onPressed: _verifyOtp,
+        ),
+        const SizedBox(height: AppConstants.spacingSm),
+        TextButton(
+          onPressed: () => setState(() => _mode = _LoginMode.otpRequest),
+          child: Text('Renvoyer un code', style: AppTextStyles.secondaryMedium.copyWith(color: AppColors.primary)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: AppColors.line)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
+          child: Text('ou', style: AppTextStyles.caption),
+        ),
+        const Expanded(child: Divider(color: AppColors.line)),
+      ],
     );
   }
 }

@@ -2,7 +2,7 @@
     <!-- Micro requis pour l'enregistrement en direct d'un son cardiaque (Analyse cardiaque IA) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
-        android:label="sante_plus_togo"
+        android:label="Dekera"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

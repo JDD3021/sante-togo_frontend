@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
-/// Centralized Flutter theme for SANTÉ+ TOGO
+/// Centralized Flutter theme for Dekera
 ///
 /// Apply this theme to MaterialApp or CupertinoApp for consistent styling
 /// across the entire application.

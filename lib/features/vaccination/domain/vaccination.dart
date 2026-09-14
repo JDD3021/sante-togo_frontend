@@ -1,4 +1,4 @@
-/// Vaccination domain model for SANTÉ+ TOGO
+/// Vaccination domain model for Dekera
 ///
 /// Represents a single dose in a patient's immunization schedule, based on
 /// the Togolese Expanded Programme on Immunization (PEV).

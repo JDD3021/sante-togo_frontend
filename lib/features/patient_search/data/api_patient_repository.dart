@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/patient.dart';
 import '../domain/patient_repository.dart';
-import '../../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_exception.dart';
 
 /// API implementation of PatientRepository

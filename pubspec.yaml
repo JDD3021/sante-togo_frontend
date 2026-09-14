@@ -1,5 +1,5 @@
-name: sante_plus_togo
-description: SANTÉ+ TOGO - Dossier Médical Électronique pour les centres de santé du Togo
+name: dekera
+description: "Dekera, le soignant connecté - Dossier Médical Électronique pour les centres de santé du Togo"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -28,10 +28,15 @@ dependencies:
   # HTTP requests for API calls
   http: ^1.1.0
 
+  # Auth: session token persistence + Google Sign-In
+  shared_preferences: ^2.3.2
+  google_sign_in: ^6.2.1
+
   # Cardiac analysis (CardioBeat): live microphone recording + file import
   record: ^5.2.0
   file_picker: ^8.1.2
   path_provider: ^2.1.4
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:

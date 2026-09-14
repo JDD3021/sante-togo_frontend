@@ -123,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SANTÉ+ TOGO',
+                'DEKERA',
                 style: AppTextStyles.brandBold
                     .copyWith(fontSize: 20, color: AppColors.white),
               ),

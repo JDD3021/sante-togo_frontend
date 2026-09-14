@@ -1,8 +1,8 @@
-# SANTÉ+ TOGO - Guide de Démo
+# Dekera - Guide de Démo
 
 ## 📋 Vue d'ensemble
 
-Cette démo présente le frontend MVP de l'application SANTÉ+ TOGO, un Dossier Médical Électronique (DME) pour les centres de santé du Togo.
+Cette démo présente le frontend MVP de l'application Dekera, un Dossier Médical Électronique (DME) pour les centres de santé du Togo.
 
 **Version:** 1.0.0 (MVP)
 **Plateforme:** Web (Flutter)
